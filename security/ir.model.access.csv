@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_./odoo-dev/odoo/addons-custom/cci_international_./odoo-dev/odoo/addons-custom/cci_international,./odoo-dev/odoo/addons-custom/cci_international../odoo-dev/odoo/addons-custom/cci_international,model_./odoo-dev/odoo/addons-custom/cci_international_./odoo-dev/odoo/addons-custom/cci_international,,1,0,0,0
