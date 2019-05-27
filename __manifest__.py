@@ -37,6 +37,7 @@
         'views/templates.xml',
         'wizards/create_visa_from_certificate_views.xml',
         'wizards/import_digital_certificates_views.xml',
+        'wizards/import_digital_visas_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

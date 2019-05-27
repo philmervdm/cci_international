@@ -110,6 +110,7 @@
             <tree string="Certificate" decoration-bf="message_needaction==True" decoration-muted="state=='cancel'">
                 <field name="message_needaction" invisible="1"/>
                 <field name="internal_ref"/>
+                <field name="digital_ref"/>
                 <field name="partner_id"/>
                 <field name="destination_id"/>
                 <field name="confirmation_date" string="Confirmation Date"/>
@@ -597,6 +598,7 @@
             <tree string="Visa" decoration-bf="message_needaction==True" decoration-muted="state=='cancel'">
                 <field name="message_needaction" invisible="1"/>
                 <field name="internal_ref"/>
+                <field name="digital_ref"/>
                 <field name="partner_id"/>
                 <field name="destination_id"/>
                 <field name="confirmation_date" string="Confirmation Date"/>
@@ -620,6 +622,12 @@
                     attrs="{'invisible': [('state', 'not in', ['draft','sent'])]}"/>
                 <button name="action_cancel" states="draft,sent,sale" type="object" string="Cancel"/>
                 <button name="action_draft" states="cancel" type="object" string="Set to Draft"/>
+                <button string="Import Digital Visas"
+                    type="action"
+                    name="%(import_digital_visas_wizard_act_window)d"
+                    help="Import Digichambers XML file of Visas"
+                    groups="base.group_user"
+                />
                 <field name="state" widget="statusbar" statusbar_visible="draft,sale,cancel"/>
             </header>
             <sheet>

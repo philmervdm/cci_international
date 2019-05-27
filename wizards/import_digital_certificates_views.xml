@@ -7,11 +7,17 @@
     <field name="arch" type="xml">
         <form>
             <group>
-                <field name="delegated_type_id"/>
-                <field name="input_file"/>
+                <field name="state" invisible="1"/>
+                <field name="delegated_type_id" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <field name="input_file" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <field name="rejected" readonly="1" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <field name="text_errors" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <field name="imported_certificates" readonly="1" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <field name="imported_visas" readonly="1" attrs="{'invisible':[('state','not in',['step2',])]}"/>
             </group>
             <footer>
-                <button string="Import" name="import_digital_certificates" type="object" class="btn-primary"/>
+                <button string="Import" name="import_digital_certificates" type="object" class="btn-primary" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <button string="Show Imported Certificates" name="show_imported_certificates" type="object" class="btn-primary" attrs="{'invisible':[('state','not in',['step2',])]}"/>
                 <button string="Cancel" class="btn-secondary" special="cancel"/>
             </footer>
         </form>

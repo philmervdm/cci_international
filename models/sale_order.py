@@ -149,6 +149,48 @@ class SaleOrder(models.Model):
         }
         self.update(values)
 
+    @api.model
+    def create(self, vals):
+        section = vals.get('section','sale_order')
+        if section in ['certificate','visa','embassy','ata_carnet','translation']:
+            delegated_type_id = vals.get('delegated_type_id',False)
+            if vals.get('delegated_type_id',False):
+                delegated_type = self.env['cci_international.delegated_type'].browse(vals.get('delegated_type_id'))
+                if delegated_type.section != section:
+                    raise UserError(_('The type of documents doesn\'t correspond to section.'))
+            else:
+                raise UserError(_('You MUST give the type of document.'))
+        # check for mandatory fields and give default values
+        if section == 'certificate':
+            if not vals.get('destination_id',False):
+                raise UserError(_('You MUST give the destination country !'))
+            if not vals.get('goods_desc',False):
+                raise UserError(_('You MUST give the goods description !'))
+            goods_value = vals.get('goods_value',0.0)
+            if (goods_value >= -0.001 and goods_value <= 0.001) and not delegated_type.accept_null_value:
+                raise UserError(_('You MUST give the value of the goods !'))
+            if not vals.get('origin_ids',False):
+                raise UserError(_('You MUST give at least one origin country.'))
+            else:
+                if not vals.get('origin_ids')[0][2]:
+                    raise UserError(_('You MUST give at least one origin country.'))
+            if not vals.get('custom_ids',False):
+                raise UserError(_('You MUST give at least one Custom Code.'))
+            else:
+                if not vals.get('custom_ids')[0][2]:
+                    raise UserError(_('You MUST give at least one Custom Code.'))
+            if not vals.get('internal_ref',False):
+                vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
+            vals['originals'] = 1
+        elif section == 'visa':
+            originals = vals.get('originals',0)
+            if originals < 1:
+                raise UserError(_('You MUST give the number of originals !'))
+            if not vals.get('internal_ref',False):
+                vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
+        result = super(SaleOrder, self).create(vals)
+        return result
+
     @api.multi
     def write(self, values):
         if self.section in ['certificate','visa']:
@@ -199,47 +241,4 @@ class SaleOrder(models.Model):
             result = super(SaleOrder, self).write(values)
         return result
 
-    @api.model
-    def create(self, vals):
-        section = vals.get('section','sale_order')
-        if section in ['certificate','visa','embassy','ata_carnet','translation']:
-            delegated_type_id = vals.get('delegated_type_id',False)
-            if vals.get('delegated_type_id',False):
-                delegated_type = self.env['cci_international.delegated_type'].browse(vals.get('delegated_type_id'))
-                if delegated_type.section != section:
-                    raise UserError(_('The type of documents doesn\'t correspond to section.'))
-            else:
-                raise UserError(_('You MUST give the type of document.'))
-        # check for mandatory fields and give default values
-        if section == 'certificate':
-            if not vals.get('destination_id',False):
-                raise UserError(_('You MUST give the destination country !'))
-            if not vals.get('goods_desc',False):
-                raise UserError(_('You MUST give the goods description !'))
-            goods_value = vals.get('goods_value',0.0)
-            if (goods_value >= -0.001 and goods_value <= 0.001) and not delegated_type.accept_null_value:
-                raise UserError(_('You MUST give the value of the goods !'))
-            if not vals.get('origin_ids',False):
-                raise UserError(_('You MUST give at least one origin country.'))
-            else:
-                if not vals.get('origin_ids')[0][2]:
-                    raise UserError(_('You MUST give at least one origin country.'))
-            if not vals.get('custom_ids',False):
-                raise UserError(_('You MUST give at least one Custom Code.'))
-            else:
-                if not vals.get('custom_ids')[0][2]:
-                    raise UserError(_('You MUST give at least one Custom Code.'))
-            if not vals.get('internal_ref',False):
-                vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
-            vals['originals'] = 1
-        elif section == 'visa':
-            originals = vals.get('originals',0)
-            if originals < 1:
-                raise UserError(_('You MUST give the number of originals !'))
-            if not vals.get('internal_ref',False):
-                print(delegated_type)
-                print(delegated_type.sequence_id)
-                vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
-        result = super(SaleOrder, self).create(vals)
-        return result
 

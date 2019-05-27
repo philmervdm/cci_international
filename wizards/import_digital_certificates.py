@@ -16,17 +16,21 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
         domain=[('section', '=', 'certificate'),('digital','=',True)],
         help='Type of Certificate to Import'
     )
-
     input_file = fields.Binary(
         string='XML File',
         required=True,
         help='The XML file from Digichambers platform',
     )
-    
+    state = fields.Selection([('step1','try_import'),('step2','show_errors')],default='step1')
+    text_errors = fields.Text(string='Errors')
+    rejected = fields.Integer(string='Rejected Certificates')
+    imported_certificates = fields.Integer(string='Imported Certificates')
+    imported_visas = fields.Integer(string='Imported Visas')
     new_ids = [] # list of the ID of created certificates
     
     @api.multi
     def import_digital_certificates(self):
+        self.state = 'step1'
         self.new_ids = []
         inputdata = base64.decodestring(self.input_file)
         EEC_COUNTRIES = {
@@ -61,14 +65,16 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
         }
 
         # store the results
-        rejected = 0
-        imported = 0
-        attached_visas = 0
+        self.rejected = 0
+        self.imported_certificates = 0
+        self.imported_visas = 0
+        self.text_errors = ''
         errors = []
         created_codes = []
 
         # objects necessary for the import
         SaleOrder = self.env['sale.order']
+        DelegatedType = self.env['cci_international.delegated_type']
         ResPartner = self.env['res.partner']
         ResCountry = self.env['res.country']
         AccountIntrastatCode = self.env['account.intrastat.code']
@@ -95,7 +101,6 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
                 partners = ResPartner.search([('vat','=',custVAT),('active','=',True),('is_company','=',True)])
                 if len(partners) == 1:
                     partner = partners[0]
-                    #obj_partner.read(cr,uid,partner_id,['name','membership_state','certificate_prefix'])
                     # extract others mandatory fields
                     accepteddatetime = str(cert.AcceptedDateTime)
                     cert_date = accepteddatetime[6:10]+'-'+accepteddatetime[3:5]+'-'+accepteddatetime[0:2]
@@ -116,7 +121,7 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
                         digital_number = str(cert.CONumber).replace(' ','')[1:]
                         certificates = SaleOrder.search([('section','=','certificate'),('digital_ref','=',digital_number)])
                         if len(certificates) > 0:
-                            rejected += 1
+                            self.rejected += 1
                             errors.append( 'InternalID : %s - Already used digital number : %s' % (str(internal_id),digital_number) )
                         else:
                             todo_field = ''
@@ -143,10 +148,10 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
                                     origin_ids.append(countries[0].id)
                                 else:
                                     lRejected = True
-                                    rejected += 1
+                                    self.rejected += 1
                                     errors.append( 'InternalID : %s - Unknown Origin : %s' % (str(internal_id),country_name) )
                             if len(origin_ids) == 0 and not lRejected:
-                                rejected += 1
+                                self.rejected += 1
                                 errors.append( 'InternalID : %s - No Origin' % (str(internal_id)) )
                                 lRejected = True
                             if not lRejected:
@@ -162,7 +167,7 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
                                         custom_codes = [new_code,]
                                     custom_code_ids.append(custom_codes[0].id)
                                 if len(custom_code_ids)==0:
-                                    rejected += 1
+                                    self.ejected += 1
                                     errors.append( 'InternalID : %s - No Custom Codes' % (str(internal_id)) )
                                     lRejected = True
                                 customerRef = ''
@@ -260,75 +265,80 @@ class ImportDigitalCertificatesWizard(models.TransientModel):
                                     certificate_data['origin_ids'] = [(6,0,origin_ids)]
                                     certificate_data['digital_ref'] = digital_number
                                     certificate_data['client_order_ref'] = customerRef
-                                    if todo_field:
-                                        certificate_data['todo'] = todo_field[0:-2]
                                     # try to find attachments
+                                    # they will be created as linked visas
                                     visas = []
-                                    if False: ###hasattr(cert.ReviewedAttachments,'Attachment'):
+                                    if hasattr(cert.ReviewedAttachments,'Attachment'):
                                         type_code = ''
                                         origs = 0
                                         copies = 0
                                         type_id = False
                                         for attach in cert.ReviewedAttachments.Attachment:
-                                            # 2014-08-05 Philmer create associated legalization rather than todo field
-                                            # let the todo field in place some days for validation purposes
                                             todo_field += attach.Type + ' (' + str(attach.Number) + ') -'
-                                            type_ids = obj_type.search(cr,uid,[('digital_ref','=',attach.Type)])
-                                            if type_ids and len(type_ids) == 1:
-                                                type_id = type_ids[0]
-                                                found_type = obj_type.read(cr,uid,type_id,['code'])
-                                                type_code = found_type['code']
+                                            delegated_types = DelegatedType.search([('digital_code','=',attach.Type),('section','=','visa')])
+                                            if delegated_types and len(delegated_types) == 1:
+                                                visa_type = delegated_types[0]
+                                                type_code = visa_type.code
                                                 origs = int(attach.Number)
                                                 if origs <= 0:
                                                     origs = 1
                                                 leg_data = {}
                                                 leg_data['section'] = 'visa'
-                                                leg_data['type_id'] = type_id
+                                                leg_data['delegated_type_id'] = visa_type.id
                                                 leg_data['date_order'] = cert_date
-                                                leg_data['order_partner_id'] = partner_id
+                                                leg_data['partner_id'] = partner.id
                                                 leg_data['asker_name'] = asker_name
                                                 leg_data['sender_name'] = content.Consignor.AddressName
                                                 leg_data['state'] = 'draft'
                                                 leg_data['goods_value'] = goods_value
-                                                leg_data['quantity_copies'] = copies
-                                                leg_data['quantity_original'] = origs
-                                                leg_data['digital_number'] = 'L' + digital_number
+                                                leg_data['copies'] = copies
+                                                leg_data['originals'] = origs
+                                                leg_data['digital_ref'] = 'L' + digital_number
                                                 leg_data['client_order_ref'] = type_code+'/'+customerRef
-                                                leg_data['goods'] = goods_desc
+                                                leg_data['goods_desc'] = goods_desc
                                                 leg_data['destination_id'] = destination_id
-                                                leg_data['member_price'] = ( found_partner['membership_state'] in ['free','invoiced','paid'] )
                                                 visas.append(leg_data)
+                                    if todo_field:
+                                        certificate_data['tovalidate'] = todo_field[0:-2]
                                     new_certificate = SaleOrder.create(certificate_data)
                                     self.new_ids.append(new_certificate.id)
-                                    # next, no more necessary, because the addition of the prefix occurs in all cases, not only in case of importing
-                                    #if new_id and found_partner['certificate_prefix']:
-                                    #    cert = obj_certificate.read(cr,uid,new_id,['text_on_invoice'])
-                                    #    obj_certificate.write(cr,uid,[new_id,],{'text_on_invoice':found_partner['certificate_prefix'].strip()+' '+(cert['text_on_invoice'] or '')})
                                     for visa in visas:
-                                        visa['certificate_id'] = int(new_id)
-                                        obj_leg.create(cr,uid,visa)
-                                        attached_visas += 1
-                                    # after the create, we add the customerref to the text on invoice
-                                    #if customerRef:
-                                    #    newly_added = obj_certificate.read(cr,uid,[new_id],['id','text_on_invoice'])[0]
-                                    #    obj_certificate.write(cr,uid,[new_id],{'text_on_invoice': customerRef + ' ' + (newly_added['text_on_invoice'] or '')})
-                                    # TODO V 7.0 : when create if 'text_on_invoice' not empty, completing with number before already existing text
-                                    # so we don't need to work on two steps, in this wizard but also manually
-                                    imported += 1
+                                        visa['certificate_id'] = int(new_certificate.id)
+                                        SaleOrder.create(visa)
+                                        self.imported_visas += 1
+                                    self.imported_certificates += 1
                     else:
-                        rejected += 1
+                        self.rejected += 1
                         errors.append( 'InternalID : %s - Unknown Destination : \'%s\'' % (str(internal_id),destination) )
                 else:
-                    rejected += 1
+                    self.rejected += 1
                     errors.append( 'InternalID : %s - Unknown VAT Number : \'%s\'' % (str(internal_id),custVAT) )
             else:
-                rejected += 1
+                self.rejected += 1
                 errors.append( 'InternalID : %s - Wrong ChamberNumber : \'%s\'' % (str(internal_id),str(cert.ChamberNumber)) )
         if len(created_codes)>0:
             errors.append('-')
             errors.append('Created Customs Code(s) : ' + ','.join(created_codes) )
         # give the result to the user
-        print('Number of imported digital certificates : %s\nAttached Visas : %s\nNumber of rejected certificates : %s\nReasons :\n%s' % (str(imported),str(attached_visas),str(rejected),'\n'.join(errors)))
+        self.state = 'step2'
+        if self.rejected > 0:
+            self.text_errors = '\n'.join(errors)
+        else:
+            self.text_errors = 'No ERRORS at ALL !\n\nGreat job !'
+        return {
+            'name': 'Import Digital Certificates',
+            'type': 'ir.actions.act_window',
+            'res_model': 'import.digital.certificates.wizard',
+            'src_model': 'sale.order',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'views': [
+                (self.env.ref('cci_international.import_digital_certificates_wizard_form_view').id, 'form'),
+            ],
+            'target': 'new',
+        }
+        #return {"type": "set_scrollTop"}
+    def show_imported_certificates():
         return {
             'name': 'Imported Certificates',
             'type': 'ir.actions.act_window',
