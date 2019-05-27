@@ -11,7 +11,7 @@ class DelegatedType(models.Model):
     section = fields.Selection([('certificate','Origin Certificate'),
                                 ('visa','Visa'),
                                 ('embassy','Embassy Folder'),
-                                ('atacarnet','ATA Carnet'),
+                                ('ata_carnet','ATA Carnet'),
                                 ('translation','Translation Folder')]
                                ,'Section',required=True,default='visa')
     accept_null_value = fields.Boolean('Accept Null Value',default=False)

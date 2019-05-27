@@ -43,7 +43,10 @@ class SaleOrder(models.Model):
     spf_send_date = fields.Date('SPF Sending')
     origin_ids = fields.Many2many('res.country','delegated_origin_country_rel','sale_order_id','res_country_id',string='Origin Countries')
     custom_ids = fields.Many2many('account.intrastat.code','delegated_custom_rel','sale_order_id','intrastat_code_id',string='Customs Codes')
-
+    ata_usage = fields.Char('Usage')
+    ata_area_id = fields.Many2one('res.country.group',string='ATA Area')
+    insurer_id = fields.Char(string='Insurer ID', store=False, related='partner_id.insurer_id')
+    
     @api.model
     def create_order_line_from_product_obj(self,prod,qty):
         new_order_line_values = {'display_type': False,
@@ -188,14 +191,19 @@ class SaleOrder(models.Model):
                 raise UserError(_('You MUST give the number of originals !'))
             if not vals.get('internal_ref',False):
                 vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
+        elif section == 'ata_carnet':
+            if not vals.get('ata_usage',''):
+                raise UserError(_('You MUST give the usage of the ATA Carnet !'))
+            if not vals.get('ata_area_id',False):
+                raise UserError(_('You MUST give the area of usage of the ATA Carnet !\nThis can be \'ALL COUNTRIES\'...'))
+            if not vals.get('internal_ref',False):
+                vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
         result = super(SaleOrder, self).create(vals)
         return result
 
     @api.multi
     def write(self, values):
         if self.section in ['certificate','visa']:
-            # check if original product already present
-            # TODO
             original_product_line = False
             if self.order_line:
                 for soline in self.order_line:
@@ -221,10 +229,11 @@ class SaleOrder(models.Model):
                         if linked_product_id == self.delegated_type.copy_product_id.id:
                             copy_product_line = True
             if self.section == 'certificate':
-                final_name = '%s %s %s' % (values.get('client_order_ref',self.client_order_ref or ''),
-                                           self.internal_ref or '',
-                                           self.destination_id.name or ''
-                                          )
+                final_name = ('%s %s %s %s' % (self.partner_id.certificate_prefix or '',
+                                               values.get('client_order_ref',self.client_order_ref or ''),
+                                               self.internal_ref or '',
+                                               self.destination_id.name or ''
+                                              )).strip().replace('  ',' ')
             elif self.section == 'visa':
                 customer_ref = values.get('client_order_ref',self.client_order_ref or '')
                 if customer_ref:
@@ -238,6 +247,9 @@ class SaleOrder(models.Model):
             number_of_copies = values.get('copies',self.copies or 0)
             if number_of_copies and not copy_product_line:
                 self.create_order_line_from_product_managed(self.delegated_type_id.copy_product_id,number_of_copies,5,final_name)
+            result = super(SaleOrder, self).write(values)
+        elif self.section == 'embassy':
+            # nothing special to do
             result = super(SaleOrder, self).write(values)
         return result
 
