@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- FORMS -->
+    <record id="view_form_delegated_type" model="ir.ui.view">
+        <field name="name">Delegated Type Form</field>
+        <field name="model">cci_international.delegated_type</field>
+        <field name="arch" type="xml">
+            <form string="Delegated Mission Type">
+                <sheet>
+                    <group name="group_top">
+                        <group name="col_left">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="federation_identification"/>
+                            <field name="accept_null_value"/>
+                        </group>
+                        <group name="col_right">
+                            <field name="section"/>
+                            <field name="sequence_id"/>
+                            <field name="digital"/>
+                            <field name="digital_code"/>
+                        </group>
+                    </group>
+                    <group name="group_products">
+                        <field name="original_product_id" attrs="{'invisible':[('section','not in',['certificate','visa','atacarnet'])]}"/>
+                        <field name="copy_product_id" attrs="{'invisible':[('section','not in',['certificate','visa'])]}"/>
+                        <field name="warranty_product_id" attrs="{'invisible':[('section','not in',['atacarnet'])]}"/>
+                        <field name="ownrisk_warranty_product_id" attrs="{'invisible':[('section','not in',['atacarnet'])]}"/>
+                        <field name="cba_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="ministry_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="embcons_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="translation_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="administrative_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="courier_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="postal_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- TREES -->
+    <record id="view_tree_delegated_type" model="ir.ui.view">
+        <field name="name">Delegated Type Tree</field>
+        <field name="model">cci_international.delegated_type</field>
+        <field name="arch" type="xml">
+            <tree string="Delegated Mission Type">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="section"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- SEARCHES -->
+    
+    <!--Actions -->
+    <act_window id="action_cci_international_delegated_type"
+        name="Delegated Mission Types"
+        res_model="cci_international.delegated_type"
+        view_mode="tree,form"
+    />
+    
+    <!-- Menu Items -->
+    <menuitem id="menu_cci_international_delegated_type"
+        name="Delegated Mission Types"
+        parent="menu_cci_international_config"
+        action="action_cci_international_delegated_type"
+    />
+</odoo>

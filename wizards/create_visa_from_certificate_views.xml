@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="create_visa_from_certificate_wizard_form_view" model="ir.ui.view">
+    <field name="name">create.visa.from.certificate.wizard.form.view</field>
+    <field name="model">create.visa.from.certificate.wizard</field>
+    <field name="arch" type="xml">
+        <form>
+            <group>
+                <field name="delegated_type_id"/>
+            </group>
+            <footer>
+                <button string="Create" name="create_visa_from_certificate" type="object" class="btn-primary"/>
+                <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="create_visa_from_certificate_wizard_act_window" model="ir.actions.act_window">
+      <field name="name">Create Visa</field>
+      <field name="res_model">create.visa.from.certificate.wizard</field>
+      <field name="src_model">sale.order</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">form</field>
+      <field name="view_id" ref="cci_international.create_visa_from_certificate_wizard_form_view"/>
+      <field name="target">new</field>
+</record>
+
+</odoo>

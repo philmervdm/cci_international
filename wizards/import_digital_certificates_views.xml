@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="import_digital_certificates_wizard_form_view" model="ir.ui.view">
+    <field name="name">import.digital.certificates.wizard.form.view</field>
+    <field name="model">import.digital.certificates.wizard</field>
+    <field name="arch" type="xml">
+        <form>
+            <group>
+                <field name="delegated_type_id"/>
+                <field name="input_file"/>
+            </group>
+            <footer>
+                <button string="Import" name="import_digital_certificates" type="object" class="btn-primary"/>
+                <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="import_digital_certificates_wizard_act_window" model="ir.actions.act_window">
+      <field name="name">Import Digital Certificates</field>
+      <field name="res_model">import.digital.certificates.wizard</field>
+      <field name="src_model">sale.order</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">form</field>
+      <field name="view_id" ref="cci_international.import_digital_certificates_wizard_form_view"/>
+      <field name="target">new</field>
+</record>
+
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--- CCI International App Top Menu -->
+    <menuitem id="menu_cci_international"
+        name="Delegated Missions"
+    />
+    <menuitem id="menu_cci_international_main"
+        name="Delegated Missions"
+        parent="menu_cci_international"
+    />
+    <menuitem id="menu_cci_international_config"
+        name="Configuration"
+        parent="menu_cci_international"
+    />
+</odoo>
