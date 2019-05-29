@@ -31,14 +31,15 @@
     'data': [
         'security/cci_international_security.xml',
         'security/ir.model.access.csv',
+        'wizards/create_visa_from_certificate_views.xml',
+        'wizards/import_digital_certificates_views.xml',
+        'wizards/import_digital_visas_views.xml',
+        'wizards/import_digital_atas_views.xml',
         'views/cci_international_menus.xml',
         'views/delegated_type_views.xml',
         'views/sale_order_views.xml',
         'views/res_partner_views.xml',
         'views/templates.xml',
-        'wizards/create_visa_from_certificate_views.xml',
-        'wizards/import_digital_certificates_views.xml',
-        'wizards/import_digital_visas_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

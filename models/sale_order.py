@@ -46,6 +46,11 @@ class SaleOrder(models.Model):
     ata_usage = fields.Char('Usage')
     ata_area_id = fields.Many2one('res.country.group',string='ATA Area')
     insurer_id = fields.Char(string='Insurer ID', store=False, related='partner_id.insurer_id')
+    ata_warranty = fields.Float('Standard Warranty',digits=(16, 2))
+    ata_pages_initial = fields.Integer('Initial Pages')
+    ata_pages_additional = fields.Integer('Additional Pages')
+    ata_validity_date = fields.Date('End of Validity')
+    ata_return_date = fields.Date('Date of Return')
     
     @api.model
     def create_order_line_from_product_obj(self,prod,qty):
@@ -60,7 +65,7 @@ class SaleOrder(models.Model):
         return True
 
     @api.model
-    def create_order_line_from_product_managed(self,prod,qty,forced_sequence,final_name):
+    def create_order_line_from_product_managed(self,prod,qty,forced_sequence,final_name,additional_forced_price=False):
 
         SaleOrder = self.env['sale.order']
         SaleOrderLine = self.env['sale.order.line']
@@ -108,7 +113,9 @@ class SaleOrder(models.Model):
                 if rule.price_max_margin:
                     price_max_margin = convert_to_price_uom(rule.price_max_margin)
                     price = min(price, price_limit + price_max_margin)
-
+        if additional_forced_price:
+            price += additional_forced_price
+              
         sale_order_line = SaleOrderLine.new({
             'order_id': self.id,
             'product_id': product.id,
@@ -250,6 +257,64 @@ class SaleOrder(models.Model):
             result = super(SaleOrder, self).write(values)
         elif self.section == 'embassy':
             # nothing special to do
+            result = super(SaleOrder, self).write(values)
+        elif self.section == 'ata_carnet':
+            # calculation of additional prioce based on covered value of the goods
+            base_value = values.get('goods_value',self.goods_value or 0.0)
+            if base_value < 25000.0:
+                add_price = base_value * 0.00839
+            elif (base_value >= 25000.0) and (base_value < 75000.0):
+                add_price = base_value * 0.00655
+            elif (base_value >= 75000.0) and (base_value < 250000.0):
+                add_price = base_value * 0.00419
+            elif base_value >= 250000.0:
+                add_price = base_value * 0.00276
+            # check if lines already created
+            original_product_line = False
+            if self.order_line:
+                for soline in self.order_line:
+                    if soline.product_id and soline.product_id.id == self.delegated_type_id.original_product_id.id:
+                        original_product_line = True
+                        break
+            if not original_product_line and values.get('order_line',False):
+                for case in values.get('order_line'):
+                    if case[0] in [0,1]:
+                        linked_product_id = case[2].get('product_id',0)
+                        if linked_product_id == self.delegated_type.original_product_id.id:
+                            original_product_line = True
+            copy_product_line = False
+            if self.order_line:
+                for soline in self.order_line:
+                    if soline.product_id and soline.product_id.id == self.delegated_type_id.copy_product_id.id:
+                        copy_product_line = True
+                        break
+            if not copy_product_line and values.get('order_line',False):
+                for case in values.get('order_line'):
+                    if case[0] in [0,1]:
+                        linked_product_id = case[2].get('product_id',0)
+                        if linked_product_id == self.delegated_type.copy_product_id.id:
+                            copy_product_line = True
+            warranty_value = values.get('ata_warranty',self.ata_warranty or 0.0)
+            if warranty_value > 0.001:
+                warranty_product_line = False
+                if self.order_line:
+                    for soline in self.order_line:
+                        if soline.product_id and soline.product_id.id == self.delegated_type_id.warranty_product_id.id:
+                            warranty_product_line = True
+                            break
+                if not warranty_product_line and values.get('order_line',False):
+                    for case in values.get('order_line'):
+                        if case[0] in [0,1]:
+                            linked_product_id = case[2].get('product_id',0)
+                            if linked_product_id == self.delegated_type.warranty_product_id.id:
+                                warranty_product_line = True
+            if not original_product_line:
+                self.create_order_line_from_product_managed(self.delegated_type_id.original_product_id,1,1,(self.internal_ref or '').strip().replace('  ',' '),add_price)
+            number_of_copies = values.get('ata_pages_initial',self.ata_pages_initial or 0)
+            if number_of_copies and not copy_product_line:
+                self.create_order_line_from_product_managed(self.delegated_type_id.copy_product_id,number_of_copies,5,(self.internal_ref or '').strip().replace('  ',' '))
+            if not warranty_product_line and warranty_value > 0.001:
+                self.create_order_line_from_product_managed(self.delegated_type_id.warranty_product_id,1,9,(self.internal_ref or '').strip().replace('  ',' '))
             result = super(SaleOrder, self).write(values)
         return result
 

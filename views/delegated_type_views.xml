@@ -22,10 +22,9 @@
                         </group>
                     </group>
                     <group name="group_products">
-                        <field name="original_product_id" attrs="{'invisible':[('section','not in',['certificate','visa','atacarnet'])]}"/>
-                        <field name="copy_product_id" attrs="{'invisible':[('section','not in',['certificate','visa'])]}"/>
-                        <field name="warranty_product_id" attrs="{'invisible':[('section','not in',['atacarnet'])]}"/>
-                        <field name="ownrisk_warranty_product_id" attrs="{'invisible':[('section','not in',['atacarnet'])]}"/>
+                        <field name="original_product_id" attrs="{'invisible':[('section','not in',['certificate','visa','ata_carnet'])]}"/>
+                        <field name="copy_product_id" attrs="{'invisible':[('section','not in',['certificate','visa','ata_carnet'])]}"/>
+                        <field name="warranty_product_id" attrs="{'invisible':[('section','not in',['ata_carnet'])]}"/>
                         <field name="cba_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                         <field name="ministry_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                         <field name="embcons_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="import_digital_atas_wizard_form_view" model="ir.ui.view">
+    <field name="name">import.digital.atas.wizard.form.view</field>
+    <field name="model">import.digital.atas.wizard</field>
+    <field name="arch" type="xml">
+        <form>
+            <group>
+                <field name="state" invisible="1"/>
+                <field name="delegated_type_id" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <field name="input_file" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <field name="rejected" readonly="1" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <field name="text_errors" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <field name="imported_atas" readonly="1" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+            </group>
+            <footer>
+                <button string="Import" name="import_digital_atas" type="object" class="btn-primary" attrs="{'invisible':[('state','not in',['step1',])]}"/>
+                <button string="Show Imported eATAs" name="show_imported_atas" type="object" class="btn-primary" attrs="{'invisible':[('state','not in',['step2',])]}"/>
+                <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="import_digital_atas_wizard_act_window" model="ir.actions.act_window">
+      <field name="name">Import Digital eATAs</field>
+      <field name="res_model">import.digital.atas.wizard</field>
+      <field name="src_model">sale.order</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">form</field>
+      <field name="view_id" ref="cci_international.import_digital_atas_wizard_form_view"/>
+      <field name="target">new</field>
+</record>
+
+</odoo>

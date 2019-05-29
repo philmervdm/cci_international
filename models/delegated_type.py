@@ -21,7 +21,6 @@ class DelegatedType(models.Model):
     original_product_id = fields.Many2one('product.product','Product for Originals')
     copy_product_id = fields.Many2one('product.product','Product for Copies')
     warranty_product_id = fields.Many2one('product.product','Product for Standard Warranty')
-    ownrisk_warranty_product_id = fields.Many2one('product.product','Product for Own Risk Warranty')
     cba_product_id = fields.Many2one('product.product','Product for C.B.A.')
     ministry_product_id = fields.Many2one('product.product','Product for Ministry')
     embcons_product_id = fields.Many2one('product.product','Product for Embassy/Consulate')

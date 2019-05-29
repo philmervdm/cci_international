@@ -27,6 +27,7 @@
             	            <field name="sender_name" attrs="{'invisible':[('section','in',['embassy','translation'])]}"/>
             	            <field name="sender_street" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
             	            <field name="sender_city" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="insurer_id"  attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
             	        </group>
             	        <group name="delegated_right" priority="2" col="2">
             	            <field name="special" attrs="{'invisible':[('section','in',['visa','embassy','translation','ata_carnet'])]}"/>
@@ -39,7 +40,12 @@
             	            <field name="certificate_id" attrs="{'invisible':[('section','in',['certificate','embassy','translation','ata_carnet'])]}"/>
             	            <field name="spf_send_date" attrs="{'invisible':[('section','in',['visa','embassy','translation'])]}"/>
             	            <field name="ata_usage" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
-            	            <field name="insurer_id"  attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="insurer_id" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="ata_warranty" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/> 
+            	            <field name="ata_pages_initial" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="ata_pages_additional" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="ata_validity_date" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+            	            <field name="ata_return_date" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
                         </group>
                         <field name="origin_ids" attrs="{'invisible':[('section','in',['visa','embassy','translation','ata_carnet'])]}"/>
                         <field name="custom_ids" domain="[('type','=','commodity')]" attrs="{'invisible':[('section','in',['visa','embassy','translation','ata_carnet'])]}"/>
@@ -1525,6 +1531,12 @@
                     attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
                 <button name="action_cancel" states="draft,sent,sale" type="object" string="Cancel"/>
                 <button name="action_draft" states="cancel" type="object" string="Set to Draft"/>
+                <button string="Import Digital eATAs"
+                    type="action"
+                    name="%(import_digital_atas_wizard_act_window)d"
+                    help="Import eATAs XML file"
+                    groups="base.group_user"
+                />
                 <!-- class="oe_stat_button" -->
                 <field name="state" widget="statusbar" statusbar_visible="draft,sale,cancel"/>
             </header>
@@ -1576,6 +1588,12 @@
                                 <field name="ata_usage" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
                 	            <field name="goods_desc" attrs="{'invisible':[('section','in',['embassy','translation'])]}"/>
                 	            <field name="goods_value" attrs="{'invisible':[('section','in',['embassy','translation'])]}"/>
+                	            <field name="ata_warranty" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/> 
+                	            <field name="ata_pages_initial" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+                	            <field name="ata_pages_additional" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+                	            <field name="spf_send_date" attrs="{'invisible':[('section','in',['visa','embassy','translation'])]}"/>
+                	            <field name="ata_validity_date" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
+                	            <field name="ata_return_date" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
                             </group>
                         </group>
                     </page>
@@ -1878,6 +1896,7 @@
             </form>
         </field>
     </record>
+
 
     <!--Actions -->
     <record id="action_cci_international_ata" model="ir.actions.act_window">
