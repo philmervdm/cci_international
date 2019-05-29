@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- FORMS -->
+    <record id="view_form_credit_line" model="ir.ui.view">
+        <field name="name">Credit Line Form</field>
+        <field name="model">cci_international.credit_line</field>
+        <field name="arch" type="xml">
+            <form string="Credit Line">
+                <sheet>
+                    <group name="group_top">
+                        <group name="col_left">
+                            <field name="name"/>
+                            <field name="from_date"/>
+                            <field name="to_date"/>
+                        </group>
+                        <group name="col_right">
+                            <field name="customer_limit"/>
+                            <field name="global_limit"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- TREES -->
+    <record id="view_tree_credit_limit" model="ir.ui.view">
+        <field name="name">Credit Line Tree</field>
+        <field name="model">cci_international.credit_line</field>
+        <field name="arch" type="xml">
+            <tree string="Credit Line">
+                <field name="name"/>
+                <field name="customer_limit"/>
+                <field name="global_limit"/>
+                <field name="from_date"/>
+                <field name="to_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- SEARCHES -->
+    
+    <!--Actions -->
+    <act_window id="action_cci_international_credit_line"
+        name="Credit Lines"
+        res_model="cci_international.credit_line"
+        view_mode="tree,form"
+    />
+    
+    <!-- Menu Items -->
+    <menuitem id="menu_cci_international_credit_line"
+        name="Credit Lines"
+        parent="menu_cci_international_config"
+        action="action_cci_international_credit_line"
+    />
+</odoo>

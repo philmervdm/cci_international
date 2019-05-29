@@ -4,7 +4,11 @@ from odoo import models, fields, api
 
 class DelegatedType(models.Model):
     _name = 'cci_international.delegated_type'
-
+    _description = """Each Sale Order used for Delegated Missions must have
+                      a delegated type who defines the products auto
+                      used for invoicing, and the sequence to use for
+                      creating internal reference"""
+                      
     name = fields.Char('Name',required=True)
     code = fields.Char('Code')
     sequence_id = fields.Many2one('ir.sequence','Sequence',required=True)

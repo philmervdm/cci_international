@@ -37,6 +37,7 @@
         'wizards/import_digital_atas_views.xml',
         'views/cci_international_menus.xml',
         'views/delegated_type_views.xml',
+        'views/credit_line_views.xml',
         'views/sale_order_views.xml',
         'views/res_partner_views.xml',
         'views/templates.xml',

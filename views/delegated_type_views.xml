@@ -28,8 +28,8 @@
                         <field name="cba_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                         <field name="ministry_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                         <field name="embcons_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
-                        <field name="translation_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
-                        <field name="administrative_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
+                        <field name="translation_product_id" attrs="{'invisible':[('section','not in',['embassy','translation'])]}"/>
+                        <field name="administrative_product_id" attrs="{'invisible':[('section','not in',['embassy','translation'])]}"/>
                         <field name="courier_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                         <field name="postal_product_id" attrs="{'invisible':[('section','not in',['embassy'])]}"/>
                     </group>

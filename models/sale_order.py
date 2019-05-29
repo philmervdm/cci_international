@@ -51,6 +51,12 @@ class SaleOrder(models.Model):
     ata_pages_additional = fields.Integer('Additional Pages')
     ata_validity_date = fields.Date('End of Validity')
     ata_return_date = fields.Date('Date of Return')
+    partner_awex_eligible = fields.Selection([('unknown','Unknown'),('yes','Eligible'),('no','NOT ELIGIBLE')],string='Partner Awex Eligible', store=False, related='partner_id.awex_eligible')
+    awex_eligible = fields.Boolean('Awex Eligible', default=False)
+    translation_amount = fields.Float('Translation Amount',digits=(16, 2))
+    cci_fee = fields.Integer('Fee (%)',default=10)
+    awex_intervention = fields.Float('Awex Intervention',digits=(16,2))
+    credit_line_id = fields.Many2one('cci_international.credit_line',string='Credit Line')
     
     @api.model
     def create_order_line_from_product_obj(self,prod,qty):
@@ -146,6 +152,7 @@ class SaleOrder(models.Model):
                 'sender_name': False,
                 'sender_street': False,
                 'sender_city': False,
+                'awex_eligible': False,
             })
             return
 
@@ -156,6 +163,7 @@ class SaleOrder(models.Model):
             'sender_name': self.partner_id.name or False,
             'sender_street': self.partner_id.street or False,
             'sender_city': (self.partner_id.zip or '') + ' ' + (self.partner_id.city or ''),
+            'awex_eligible': (self.partner_id.awex_eligible == 'yes')
         }
         self.update(values)
 
