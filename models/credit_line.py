@@ -20,5 +20,20 @@ class CCICreditLine(models.Model):
         #  - the total of the interventions for this customer on this credit line can't exceed customer_limit, for each customer
         #  - the total intervention for all customers on this credit line can't exceed global_limit
         SaleOrder = self.env['sale.order']
-        return 0.0
+        global_usage = 0.0
+        partner_usage = 0.0
+        sorders = SaleOrder.search([('credit_line_id','=',self.id),('awex_intervention','>',0.0)])
+        print('sorders')
+        print(len(sorders))
+        for sale_order in sorders:
+            global_usage += sale_order.awex_intervention
+            if sale_order.partner_id.id == partner.id:
+                partner_usage += sale_order.awex_intervention
+        left_global = max(self.global_limit - global_usage,0.0)
+        left_partner = max(self.customer_limit - partner_usage,0.0)
+        print('Left Global')
+        print(left_global)
+        print('Left Partner')
+        print(left_partner)
+        return min(base_amount/2,left_global,left_partner)
         

@@ -2048,7 +2048,26 @@
                 	        <group name="delegated_right" priority="2" col="2">
                                 <field name="client_order_ref"/>
                                 <field name="awex_eligible" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}"/>
-                	            <field name="awex_intervention" readonly="1" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}"/>
+                                <label for="awex_intervention"
+                                    attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}"
+                                />
+                                <div class="o_row">
+                                    <field name="awex_intervention" readonly="1"
+                                        attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}"
+                                    />
+                                    <button string="Get Intervention"
+                                        type="object"
+                                        name="set_awex_intervention"
+                                        attrs="{
+                                          'invisible': [
+                                          ('section','not in',['embassy','translation']),
+                                          ('awex_eligible','=',False)
+                                          ]
+                                        }"
+                                        class="oe_link"
+                                    />
+                                </div>
+                	            <field name="credit_line_id" readonly="1"/> <!-- TO invisible after tests-->
                             </group>
                         </group>
                     </page>
