@@ -166,7 +166,7 @@ class ImportDigitalVisasWizard(models.TransientModel):
             'view_mode': 'tree,form',
             'views': [
                 (self.env.ref('cci_international.view_visa_tree').id, 'tree'),
-                (self.env.ref('cci_international.view_cci_visa_form').id, 'form'),
+                (self.env.ref('cci_international.view_form_delegated').id, 'form'),
             ],
             'domain': [('id', 'in', self.new_ids)],
         }

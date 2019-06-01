@@ -53,11 +53,12 @@ class SaleOrder(models.Model):
     ata_validity_date = fields.Date('End of Validity')
     ata_return_date = fields.Date('Date of Return')
     partner_awex_eligible = fields.Selection([('unknown','Unknown'),('yes','Eligible'),('no','NOT ELIGIBLE')],string='Partner Awex Eligible', store=False, related='partner_id.awex_eligible')
-    awex_eligible = fields.Boolean('Awex Eligible', default=False)
+    awex_eligible = fields.Boolean('AWEX Eligible', default=False)
     translation_amount = fields.Monetary('Translation Amount')
     cci_fee = fields.Integer('Fee (%)',default=10)
-    awex_intervention = fields.Monetary('Awex Intervention')
+    awex_intervention = fields.Monetary('AWEX Intervention')
     credit_line_id = fields.Many2one('cci_international.credit_line',string='Credit Line')
+    awex_payment_id = fields.Many2one('account.move',string='AWEX Payment')
     
     #@api.model
     #def create_order_line_from_product_obj(self,prod,qty):
@@ -645,4 +646,49 @@ class SaleOrder(models.Model):
             result = super(SaleOrder, self).write(values)
         return result
 
-
+    @api.multi
+    def create_awex_payment(self):
+        if self.awex_payment_id:
+            raise UserError(_('This document has already created an AWEX move.\n\nImpossible to create a new one.'))
+        else:
+            if not self.invoice_ids:
+                raise UserError(_('This document has not yet been invoiced.\n\nThe AWEX move MUST be linked to an invoice, so nothing has been created.'))
+            else:
+                awex_journal_id = self.env['account.journal'].search([('code','=','AWEX')])
+                if not (awex_journal_id and len(awex_journal_id) == 1):
+                    raise UserError(_('The journal AWEX has not been correctly defined.\n\nNothing is done.'))
+                else:
+                    AccountMove = self.env['account.move']
+                    AccountMoveLine = self.env['account.move.line']
+                    move_data = {
+                        'name': awex_journal_id.sequence_id.next_by_id(),
+                        'journal_id': awex_journal_id.id,
+                        'date': self.confirmation_date or datetime.date.today().strftime('%Y-%m-%d'),
+                        'ref': self.internal_ref or 'AWEX',
+                        'state': 'posted',
+                    }
+                    line_datas = []
+                    line_data = {
+                        'name': self.internal_ref or 'AWEX',
+                        'partner_id': self.partner_id.id,
+                        'date': move_data['date'].strftime('%Y-%m-%d'),
+                        'date_maturity': move_data['date'].strftime('%Y-%m-%d'),
+                        'account_id': self.partner_id.property_account_receivable_id.id,
+                        'credit': self.awex_intervention or 0.0,
+                    }
+                    line_datas.append( (0,0,line_data) )
+                    line_data = {
+                        'name': self.internal_ref or 'AWEX',
+                        'partner_id': self.partner_id.id,
+                        'date': move_data['date'].strftime('%Y-%m-%d'),
+                        'date_maturity': move_data['date'].strftime('%Y-%m-%d'),
+                        'account_id': awex_journal_id.default_debit_account_id.id,
+                        'debit': self.awex_intervention or 0.0,
+                    }
+                    line_datas.append( (0,0,line_data) )
+                    # TODO partial reconcile between invoice and AWEX move
+                    #      using account_reconcile_model ?
+                    move_data['line_ids'] = line_datas
+                    new_move = AccountMove.create(move_data)
+                    self.write({'awex_payment_id':new_move.id})
+        return True

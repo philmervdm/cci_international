@@ -20,7 +20,36 @@
                 <field name="insurer_id" readonly="1" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
                 <field name="partner_awex_eligible" attrs="{'invisible':[('section','in',['certificate','visa','embassy','ata_carnet'])]}"/>
             </field>
-
+            <button name="action_draft" position="after">
+                <button string="Import Digital Certificates"
+                    type="action"
+                    name="%(import_digital_certificates_wizard_act_window)d"
+                    help="Import Digichambers XML file of Certificates"
+                    groups="base.group_user"
+                    attrs="{'invisible':[('section','not in',['certificate'])]}"
+                />
+                <button string="Create Visa"
+                    type="action"
+                    name="%(create_visa_from_certificate_wizard_act_window)d"
+                    help="Create a Visa from the data of this Certificate"
+                    groups="base.group_user"
+                    attrs="{'invisible':[('section','not in',['certificate'])]}"
+                />
+                <button string="Import Digital Visas"
+                    type="action"
+                    name="%(import_digital_visas_wizard_act_window)d"
+                    help="Import Digichambers XML file of Visas"
+                    groups="base.group_user"
+                    attrs="{'invisible':[('section','not in',['visa'])]}"
+                />
+                <button string="Import Digital eATAs"
+                    type="action"
+                    name="%(import_digital_atas_wizard_act_window)d"
+                    help="Import eATAs XML file"
+                    groups="base.group_user"
+                    attrs="{'invisible':[('section','not in',['ata_carnet'])]}"
+                />
+            </button>
 	        <xpath expr="//page[@name='order_lines']" position='before'>
 	        	<page string="Delegated Missions" name="so_delegated_page" attrs="{'invisible':[('section','=','sale_order')]}">
             	    <group name="delegated_content">
@@ -75,6 +104,26 @@
                                 />
                             </div>
             	            <field name="credit_line_id" readonly="1" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}"/>
+                            <label for="awex_payment_id"
+                                attrs="{'invisible':['|',('awex_intervention','&lt;=',0.001),('section','in',['certificate','visa','ata_carnet'])]}"
+                            />
+                            <div class="o_row" attrs="{'invisible':['|',('awex_intervention','&lt;=',0.001),('section','in',['certificate','visa','ata_carnet'])]}">
+                                <field name="awex_payment_id" readonly="1"
+                                    attrs="{'invisible':['|',('awex_intervention','&lt;=',0.001),('section','in',['certificate','visa','ata_carnet'])]}"
+                                />
+                                <button string="Create AWEX Payment"
+                                    type="object"
+                                    name="create_awex_payment"
+                                    attrs="{
+                                      'invisible': [
+                                      '|',('awex_intervention','&lt;=',0.001),
+                                      '&amp;',('section','not in',['embassy','translation']),
+                                          ('awex_eligible','=',False)
+                                      ]
+                                    }"
+                                    class="oe_link"
+                                />
+                            </div>
                         </group>
                             <field name="origin_ids" options="{'no_create': True}" attrs="{'invisible':[('section','in',['visa','embassy','translation','ata_carnet'])]}">
                                 <tree>
