@@ -153,70 +153,70 @@ class SaleOrder(models.Model):
                                  destination_name or ''
                                 )).strip().replace('  ',' ')
 
-    @api.model
-    def create_order_line_from_product_managed(self,prod,qty,forced_sequence,final_name,additional_forced_price=False):
-        SaleOrder = self.env['sale.order']
-        SaleOrderLine = self.env['sale.order.line']
+    #@api.model
+    #def create_order_line_from_product_managed(self,prod,qty,forced_sequence,final_name,additional_forced_price=False):
+    #    SaleOrder = self.env['sale.order']
+    #    SaleOrderLine = self.env['sale.order.line']
+    #
+    #    product = prod.with_context(
+    #        lang=self.partner_id.lang,
+    #        partner=self.partner_id,
+    #        quantity=qty,
+    #        date=self.date_order,
+    #        pricelist=self.pricelist_id.id
+    #    )
 
-        product = prod.with_context(
-            lang=self.partner_id.lang,
-            partner=self.partner_id,
-            quantity=qty,
-            date=self.date_order,
-            pricelist=self.pricelist_id.id
-        )
+    #    # NOTE: Obtain suitable rule, if any, then replicate the same
+    #    #       computation done by pricelist object...
+    #    result = self.pricelist_id._compute_price_rule([(product, qty, self.partner_id)])
 
-        # NOTE: Obtain suitable rule, if any, then replicate the same
-        #       computation done by pricelist object...
-        result = self.pricelist_id._compute_price_rule([(product, qty, self.partner_id)])
+    #    rule_id = result[product.id][1]
+    #    price = prod.list_price
 
-        rule_id = result[product.id][1]
-        price = prod.list_price
+    #    convert_to_price_uom = (lambda price: product.uom_id._compute_price(price, product.uom_id))
 
-        convert_to_price_uom = (lambda price: product.uom_id._compute_price(price, product.uom_id))
+    #    if rule_id:
 
-        if rule_id:
+    #        rule = self.env['product.pricelist.item'].browse(rule_id)
 
-            rule = self.env['product.pricelist.item'].browse(rule_id)
-
-            if rule.compute_price == 'fixed':
-                price = convert_to_price_uom(rule.fixed_price)
-            elif rule.compute_price == 'percentage':
-                price = (price - (price * (rule.percent_price / 100))) or 0.0
-            else:
-                # complete formula
-                price_limit = price
-                price = (price - (price * (rule.price_discount / 100))) or 0.0
-                if rule.price_round:
-                    price = float_round(price, precision_rounding=rule.price_round)
-
-                if rule.price_surcharge:
-                    price_surcharge = convert_to_price_uom(rule.price_surcharge)
-                    price += price_surcharge
-
-                if rule.price_min_margin:
-                    price_min_margin = convert_to_price_uom(rule.price_min_margin)
-                    price = max(price, price_limit + price_min_margin)
-
-                if rule.price_max_margin:
-                    price_max_margin = convert_to_price_uom(rule.price_max_margin)
-                    price = min(price, price_limit + price_max_margin)
-        if additional_forced_price:
-            price += additional_forced_price
-              
-        sale_order_line = SaleOrderLine.new({
-            'order_id': self.id,
-            'product_id': product.id,
-            'product_uom_qty': qty,
-            'event_ticket_id': False,
-            'price_unit': price
-        })
-
-        sale_order_line_values = sale_order_line._convert_to_write({name: sale_order_line[name] for name in sale_order_line._cache})
-        sale_order_line_values['name'] = final_name
-        sale_order_line_values['sequence'] = forced_sequence
-        sale_order_line = sale_order_line.create(sale_order_line_values)
-        return True
+    #        if rule.compute_price == 'fixed':
+    #            price = convert_to_price_uom(rule.fixed_price)
+    #        elif rule.compute_price == 'percentage':
+    #            price = (price - (price * (rule.percent_price / 100))) or 0.0
+    #        else:
+    #            # complete formula
+    #            price_limit = price
+    #            price = (price - (price * (rule.price_discount / 100))) or 0.0
+    #            if rule.price_round:
+    #                price = float_round(price, precision_rounding=rule.price_round)
+    #
+    #            if rule.price_surcharge:
+    #                price_surcharge = convert_to_price_uom(rule.price_surcharge)
+    #                price += price_surcharge
+    #
+    #            if rule.price_min_margin:
+    #                price_min_margin = convert_to_price_uom(rule.price_min_margin)
+    #                price = max(price, price_limit + price_min_margin)
+    #
+    #            if rule.price_max_margin:
+    #                price_max_margin = convert_to_price_uom(rule.price_max_margin)
+    #                price = min(price, price_limit + price_max_margin)
+    #    if additional_forced_price:
+    #        price += additional_forced_price
+    #         
+    #    sale_order_line = SaleOrderLine.new({
+    #        'order_id': self.id,
+    #        'product_id': product.id,
+    #        'product_uom_qty': qty,
+    #        'event_ticket_id': False,
+    #        'price_unit': price
+    #    })
+    #
+    #    sale_order_line_values = sale_order_line._convert_to_write({name: sale_order_line[name] for name in sale_order_line._cache})
+    #    sale_order_line_values['name'] = final_name
+    #    sale_order_line_values['sequence'] = forced_sequence
+    #    sale_order_line = sale_order_line.create(sale_order_line_values)
+    #    return True
 
     @api.multi
     @api.onchange('partner_id')
@@ -298,6 +298,13 @@ class SaleOrder(models.Model):
             vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
         elif section == 'embassy':
             vals['internal_ref'] = delegated_type.sequence_id.next_by_id()
+            translation_amount = 0.0
+            if vals['order_line']:
+                for created_line in vals['order_line']:
+                    if created_line[2]['product_id'] == delegated_type.translation_product_id.id:
+                        translation_amount += ((created_line[2]['price_unit'] or 0.0 ) * (created_line[2]['product_uom_qty'] or 0))
+            if translation_amount:
+                vals['translation_amount'] = translation_amount
         elif section == 'ata_carnet':
             if not vals.get('ata_usage',''):
                 raise UserError(_('You MUST give the usage of the ATA Carnet !'))
@@ -496,6 +503,26 @@ class SaleOrder(models.Model):
             result = super(SaleOrder, self).write(values)
         elif self.section == 'embassy':
             # nothing special to do
+            translation_amount = 0.0
+            if values.get('order_line',False):
+                for order_line in values['order_line']:
+                    if order_line[0] == 2: # delete of a sale order line
+                        # ignored in the computation of new value of translation_amount
+                        pass
+                    elif order_line[0] == 0: # creation d'une ligne de commande
+                        # ignored in the computation of new value of translation_amount
+                        translation_amount += ((order_line[2]['price_unit'] or 0.0 ) * (order_line[2]['product_uom_qty'] or 0))
+                    elif order_line[0] == 1:
+                        if ('product_id' in order_line[2]) and (product_id == self.delegated_type_id.translation_product_id.id):
+                            if 'price_unit' in order_line[2]:
+                                translation_amount += (order_line[2]['price_unit'])
+                            else:
+                                old_value = (self.env['sale.order.line'].browse(order_line[1]).price_unit or 0.0)
+                                translation_amount += old_value
+                        elif ('price_unit' in order_line[2]) and (self.env['sale.order.line'].browse(order_line[1]).product_id.id == self.delegated_type_id.translation_product_id.id):
+                            translation_amount += (order_line[2]['price_unit'])
+            if translation_amount:
+                values['translation_amount'] = translation_amount
             result = super(SaleOrder, self).write(values)
         elif self.section == 'ata_carnet':
             # change in originals line

@@ -35,7 +35,7 @@
             	            <field name="sender_name" attrs="{'invisible':[('section','in',['embassy','translation'])]}"/>
             	            <field name="sender_street" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
             	            <field name="sender_city" attrs="{'invisible':[('section','in',['certificate','visa','embassy','translation'])]}"/>
-            	            <field name="translation_amount" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet','embassy'])]}" widget="monetary"/>
+            	            <field name="translation_amount" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet'])]}" widget="monetary"/>
             	            <field name="cci_fee" attrs="{'invisible':[('section','in',['certificate','visa','ata_carnet','embassy'])]}"/>
             	        </group>
             	        <group name="delegated_right" priority="2" col="2">
